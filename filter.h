@@ -202,51 +202,52 @@ public:
     {
         set(f0, res);
     }
+
     // f0 = radians/sample, res = 
     void set_exact(float f0, float res)
     {
         set(std::tan(f0/2)*2, res);
     }
+
     void set(float f0, float res)
     {
-        // _R = res;
-        // _R2_g = r2g;
-
-        float r2g = res * 2 + _g;
         _g = f0 / 2;
-        _c_hp = r2g * _g;
-        _c_bp = r2g + _g;
-        _norm = 1 / (1 + _c_hp);
+        _r2g = res * 2 + _g;
+        _norm = 1 / (1 + _r2g * _g);
     }
-
-    // void step(float x)
-    // {
-    //     _hp = ( x - _R2_g * _s1 - _s2 ) * _norm;
-
-    //     _bp = _g * _hp + _s1;
-    //     _s1 = _g * _hp + _bp;
-
-    //     _lp = _g * _bp + _s2;
-    //     _s2 = _g * _bp + _lp;
-    // }
-
     svf & operator()(float x)
     {
-        // _s1 = _g * _hp + _bp;
-        // _s2 = _g * _bp + _lp;
+        _hp = ( x - _r2g * _s1 - _s2 ) * _norm;
 
-        // _hp = ( x - _R2_g * _s1 - _s2 ) * _norm;
-        // _hp = ( x - _R2_g * _g * _hp - _R2_g * _bp - _g * _bp - _lp ) * _norm;
-        // _hp = ( x - (_R2_g * _g) * _hp - (_R2_g + g) * _bp - _lp ) * _norm;
-        float hp1 = _hp;
-        float bp1 = _bp;
+        _bp = _g * _hp + _s1;
+        _s1 = _g * _hp + _bp;
 
-        _hp = (x - (_c_hp * _hp) - (_c_bp * _bp) - _lp) * _norm;
-        _bp += _g * (_hp + hp1);
-        _lp += _g * (_bp + bp1);
-
+        _lp = _g * _bp + _s2;
+        _s2 = _g * _bp + _lp;
+        
         return *this;
     }
+
+    // void set(float f0, float res)
+    // {
+    //     _g = f0 / 2;
+    //     _r2g = res * 2 + _g;
+    //     _c_hp = r2g * _g;
+    //     _c_bp = r2g + _g;
+    //     _norm = 1 / (1 + _c_hp);
+    // }
+
+    // svf & operator()(float x)
+    // {
+    //     float hp1 = _hp;
+    //     float bp1 = _bp;
+
+    //     _hp = (x - (_c_hp * _hp) - (_c_bp * _bp) - _lp) * _norm;
+    //     _bp += _g * (_hp + hp1);
+    //     _lp += _g * (_bp + bp1);
+
+    //     return *this;
+    // }
 
     float hp() const { return _hp; }
     float bp() const { return _bp; }
@@ -254,12 +255,16 @@ public:
 
 private:
     float _g;
+    float _r2g;
     float _c_hp;
     float _c_bp;
     float _norm;
     float _hp = 0;
     float _bp = 0;
     float _lp = 0;
+
+    float _s1 = 0;
+    float _s2 = 0;
 };
 
 

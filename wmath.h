@@ -19,6 +19,15 @@ inline float exp(float x)
     return p.f / n.f;
 }
 
+inline float tanh(float x)
+{
+    // https://github.com/ekmett/approximate/blob/master/cbits/fast.c
+    union { float f; int32_t i; } p, n;
+    p.i = 1064866805 + 12102203 * x; // exp(x)
+    n.i = 1064866805 - 12102203 * x; // exp(-x)
+    return (p.f - n.f) / (p.f + n.f);
+}
+
 
 inline int floor(float x)
 {   return int(x) - (x<0);

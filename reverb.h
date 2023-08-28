@@ -28,9 +28,9 @@ struct ap_feedback : public delay<MaxSize>
     }
     float operator()(float x, float boost = 0)
     {   float fb = _fb + (1 - _fb) * boost;
-        x += _y * fb;
+        x -= _y * fb;
         _y = delay<MaxSize>::operator()(x);
-        return _y - x * fb;
+        return _y + x * fb;
     }
 };
 
