@@ -3,25 +3,33 @@
 #include "delay.h"
 #include "filter.h"
 #include "midi.h"
+#include "control.h"
 
 namespace wade {
 
-class simple_flute
-{
-public:
-    static constexpr int num_controls() { return 14; }
 
-    simple_flute(float * controls)
-    :   _controls(controls)
+// struct simple_flute : has_controls<8>
+// {
+//     control & reed_pressure() { return controls[0]; }
+//     control & damping() { return controls[6]; }
+//     control & force() { return controls[7]; }
+
+struct simple_flute
+{
+    float freq = 0;
+    float reed_pressure = 0.5;
+    float damping = 0.9;
+    float force = 0;
+
+    simple_flute()
     {   
         // _period = 1 / midi_freq(69);
         // _delay.set_delay(_period / 2 - 1.5);
-
-        _controls[6] = 0.9; // damping
-        _controls[7] = 0; // bow force
     }
+    
     void note_on(uint8_t note, uint8_t vel)
-    {   _period = 1 / midi_freq(note);
+    {   
+        _period = 1 / midi_freq(note);
         _delay.set_delay(_period / 2 - 1.5);
         // _delay.set_reflection(-0.95);
         _delay.clear();

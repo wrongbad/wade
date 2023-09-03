@@ -100,8 +100,8 @@ public:
         }
         _phase = p - fast::floor(p);
     }
-private:
-    float const* _controls;
+
+    
     int _key = 0;
     bool _attacking = false;
     float _freq = 0;
