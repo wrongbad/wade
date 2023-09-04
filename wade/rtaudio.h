@@ -1,6 +1,7 @@
 #pragma once
 
-#include "audio.h"
+#include "wade/audio.h"
+#include "wade/math.h"
 
 namespace wade {
 
@@ -11,6 +12,7 @@ struct rtaudio
     int sample_rate = 44100;
     int in_channels = 0;
     int out_channels = 2;
+    bool clip = true;
     RtAudio _driver;
 
     static int render(void * out, void * in, unsigned frames,
@@ -22,6 +24,9 @@ struct rtaudio
         wade::audio_context ctx { self->sample_rate, false };
         out_buf.fill(0);
         self->delegate.render(in_buf, out_buf, ctx);
+        if(clip)
+            for(float & x : out_buf.flatten())
+                x = wade::clip(x);
         return (int)ctx.abort;
     }
 

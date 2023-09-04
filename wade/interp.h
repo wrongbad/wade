@@ -24,7 +24,7 @@ struct allpass_interp
 
 struct variable_resampler
 {
-    analog_cheby1_lowpass<7, 3> filter;
+    analog_cheby1_lowpass<5, 3> filter;
     bool printed = false;
 
     template<class Audio>

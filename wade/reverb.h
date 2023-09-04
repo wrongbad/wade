@@ -60,7 +60,7 @@ struct basic_reverb
     float operator()(float x)
     {   
         float out = 0;
-        for(auto & filter : allpass) { x = filter(x); }
+        // for(auto & filter : allpass) { x = filter(x); }
         for(auto & filter : combs) { out += filter(x); }
         return out;
     }

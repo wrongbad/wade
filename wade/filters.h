@@ -34,6 +34,15 @@ struct filter
     }
 }; 
 
+struct basic_lowpass
+{
+    float rate = 0.01;
+    float y = 0;
+    float operator()(float x)
+    {
+        return (y += (x - y) * rate);
+    }
+};
 
 template<int N>
 struct fir_damper : public filter<N>

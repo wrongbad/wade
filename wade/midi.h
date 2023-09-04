@@ -1,8 +1,22 @@
 #pragma once
 
 #include <cmath>
+#include <array>
 
 namespace wade {
+
+namespace detail {
+
+template<class T, int B, int E>
+constexpr std::array<T, E-B> arange()
+{
+    std::array<T, E-B> out;
+    for(int i=B ; i<E ; i++) { out[i-B] = i; }
+    return out;
+}
+
+} // detail 
+
 
 // returns cycles/sample units
 inline float midi_hz(float note, float tune_a4 = 440)
@@ -67,6 +81,7 @@ enum midi_command {
 
 struct voice_control
 {
+    int voice_map = -1;
     float note = 0;
     float gate = 0;
     float velocity = 0;
@@ -77,7 +92,56 @@ struct voice_control
 
 struct mpe_handler
 {
-    voice_control voices[16] = {};
+    static constexpr int N = 16;
+    voice_control voices[N];
+    std::array<int,N> order = detail::arange<int,0,N>();
+    int polyphony_mapped = 0;
+
+    template<class Voices, class Func>
+    void map(Voices && vs, int poly, Func && func)
+    {
+        if(poly > N) { poly = N; }
+        map_voices(poly);
+        for(int i=0 ; i<poly ; i++)
+        {
+            voice_control const& ctl = (*this)[i];
+            assert(ctl.voice_map < poly);
+            func(vs[ctl.voice_map], ctl);
+        }
+    }
+
+    voice_control const& operator[](int i) const
+    {
+        return voices[order[i]];
+    }
+    int size() const { return N; }
+
+    void map_voices(int polyphony)
+    {
+        if(polyphony > N) { polyphony = N; }
+        if(polyphony_mapped == polyphony) { return; }
+        bool taken[N] = {false};
+
+        for(int i=0 ; i<polyphony ; i++)
+        {
+            int & map = voices[order[i]].voice_map;
+            if(map >= 0)
+            { 
+                if(taken[map] || map >= polyphony) { map = -1; }
+                else { taken[map] = true; }
+            }
+        }
+        for(int i=0 ; i<polyphony ; i++)
+        {
+            int & map = voices[order[i]].voice_map;
+            if(map < 0)
+            {
+                while(taken[++map]) {} // find slot
+            }
+            taken[map] = true;
+        }
+        polyphony_mapped = polyphony;
+    }
 
     void operator()(uint8_t const* msg, size_t len, double ts = 0)
     {
@@ -96,11 +160,13 @@ struct mpe_handler
                     voice.note = msg[1];
                     voice.gate = 1;
                     voice.velocity = msg[2] / 127.0f;
+                    move_to_front(chan);
                     break;
                 } // else fall through
             case NOTE_OFF:
                 voice.gate = 0;
                 voice.velocity = msg[2] / 127.0f;
+                move_to_back(chan);
                 break;
             case SET_CONTROL:
                 voice.controls[msg[1]] = msg[2] / 127.0;
@@ -113,6 +179,48 @@ struct mpe_handler
                 voice.pitch_bend = v / float(1<<7);
                 break;
         }
+    }
+    void move_to_front(int chan)
+    {
+        for(int i=N-1 ; i>0 ; i--)
+            if(order[i] == chan)
+                std::swap(order[i-1], order[i]);
+        polyphony_mapped = 0;
+    }
+    void move_to_back(int chan)
+    {
+        for(int i=0 ; i<N-1 ; i++)
+            if(order[i] == chan)
+                std::swap(order[i], order[i+1]);
+        polyphony_mapped = 0;
+    }
+};
+
+
+template<class Voice, int N>
+struct Polyphony
+{
+    Voice voices[N];
+
+    template<class ControlBank>
+    void render(ControlBank && controls, int poly)
+    {
+        if(poly > N) { poly = N; }
+        controls.map_voices(poly);
+
+
+
+        // using Control = std::remove_refernce_t<decltype(controls[0])>;
+        // Control * sorted[N];
+        // for(int i=0 ; i<N ; i++)
+        // {
+        //     sorted[i] = &controls[i];
+        // }
+        // for(int i=0 ; i<N ; i++)
+        // {   
+        //     int aff = sorted[i]->voice_affinity;
+        //     if(aff >= 0 && aff != i) std::swap(sorted[i], sorted[aff])
+        // }
     }
 };
 

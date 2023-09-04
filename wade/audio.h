@@ -166,6 +166,7 @@ struct audio
     int size() const { return channels * frames; }
     mono channel(int c) const { return {data + c*frames, frames}; }
     mono operator[](int c) const { return channel(c); }
+    mono flatten() const { return {data, size()}; }
 
     audio & fill(float v = 0)
     {
