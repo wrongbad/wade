@@ -24,7 +24,7 @@ struct rtaudio
         wade::audio_context ctx { self->sample_rate, false };
         out_buf.fill(0);
         self->delegate.render(in_buf, out_buf, ctx);
-        if(clip)
+        if(self->clip)
             for(float & x : out_buf.flatten())
                 x = wade::clip(x);
         return (int)ctx.abort;

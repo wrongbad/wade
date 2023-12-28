@@ -67,13 +67,6 @@ struct finnwave
         float nfreq = N * freq;
         while(nphase > N/2) { nphase -= N; }
 
-
-        float b = rolloff;
-        float e_b = std::exp(-b);
-        float e_2b = e_b * e_b;
-        float e_n1b = std::exp(-(N+1) * b);
-        float e_n2b = e_n1b * e_b;
-
         for(float & y : out)
         {   
             nphase += nfreq;
