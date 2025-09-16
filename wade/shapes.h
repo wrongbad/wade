@@ -1,6 +1,7 @@
 #pragma once
 
 #include "wade/math.h"
+#include "wade/audio.h"
 
 namespace wade {
 

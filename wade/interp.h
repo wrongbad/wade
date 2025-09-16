@@ -1,5 +1,7 @@
 #pragma once
 
+#include "wade/filters.h"
+
 namespace wade {
 
 struct allpass_interp
